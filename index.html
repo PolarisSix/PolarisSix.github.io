@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { motion } from "framer-motion";
 
 // ------------------------------------------------------------
-// Network6 – Interface
+// NetworkSix – Interface
 // Hintergrund: abstrakte Neuronen (Partikel + Verbindungen),
 // die sich zu einem 3D‑Hexagon (Hex‑Prisma) hin verbinden.
 // ------------------------------------------------------------
@@ -119,7 +119,6 @@ export default function NetworkSixInterface() {
     hexWire.geometry.computeBoundingSphere();
     const tmpAttr = (hexWire.geometry as THREE.EdgesGeometry).attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < tmpAttr.count; i += 2) {
-      // nimm jeden zweiten Punkt (Kanten) – wir sammeln beide Enden
       const v1 = new THREE.Vector3(
         tmpAttr.getX(i),
         tmpAttr.getY(i),
@@ -133,7 +132,6 @@ export default function NetworkSixInterface() {
       hexVerts.push(v1, v2);
     }
 
-    // Mausparallaxe
     const mouse = new THREE.Vector2(0, 0);
     const onMove = (e: MouseEvent) => {
       const rect = mount.getBoundingClientRect();
@@ -142,7 +140,6 @@ export default function NetworkSixInterface() {
     };
     window.addEventListener("mousemove", onMove);
 
-    // Resize
     const onResize = () => {
       renderer.setSize(mount.clientWidth, mount.clientHeight);
       camera.aspect = mount.clientWidth / mount.clientHeight;
@@ -150,14 +147,12 @@ export default function NetworkSixInterface() {
     };
     window.addEventListener("resize", onResize);
 
-    // Animation
     let frameId: number;
     const clock = new THREE.Clock();
 
     function animate() {
       const dt = Math.min(clock.getDelta(), 0.033);
 
-      // Hexagon sanft rotieren / parallaxen
       hexWire.rotation.y += 0.08 * dt;
       hexShell.rotation.y = hexWire.rotation.y;
       const parallax = 0.2;
@@ -165,18 +160,15 @@ export default function NetworkSixInterface() {
       camera.position.y = 0.4 + mouse.y * 0.1;
       camera.lookAt(0, 0, 0);
 
-      // Partikel updaten (sanftes Umherschweben + begrenzen)
       const pos = neuronGeo.getAttribute("position") as THREE.BufferAttribute;
       for (let i = 0; i < NEURON_COUNT; i++) {
         const i3 = i * 3;
         let x = pos.getX(i) + velocities[i3 + 0];
         let y = pos.getY(i) + velocities[i3 + 1];
         let z = pos.getZ(i) + velocities[i3 + 2];
-        // leichte Rückstellkraft zum Zentrum
         velocities[i3 + 0] += -x * 0.00003;
         velocities[i3 + 1] += -y * 0.00003;
         velocities[i3 + 2] += -z * 0.00003;
-        // sanfte Grenzen
         x = THREE.MathUtils.clamp(x, -RANGE, RANGE);
         y = THREE.MathUtils.clamp(y, -RANGE * 0.8, RANGE * 0.8);
         z = THREE.MathUtils.clamp(z, -RANGE, RANGE);
@@ -184,29 +176,24 @@ export default function NetworkSixInterface() {
       }
       pos.needsUpdate = true;
 
-      // Verbindungen neu zeichnen
       let ptr = 0;
       let cptr = 0;
-      const maxDist = 1.25; // Verbindungsschwelle
-      const center = new THREE.Vector3(0, 0, 0);
-
+      const maxDist = 1.25;
       for (let i = 0; i < NEURON_COUNT; i++) {
         const i3 = i * 3;
         const ax = pos.getX(i);
         const ay = pos.getY(i);
         const az = pos.getZ(i);
 
-        // ein paar Verbindungen von Neuronen -> Hexagon-Knoten
         if (i % 11 === 0 && ptr + 6 < MAX_CONNECTIONS * 3) {
-          const hv = hexVerts[(i + Math.floor(performance.now() * 0.001)) % hexVerts.length];
+          const hv = new THREE.Vector3(0, 0, 0);
           conPositions[ptr++] = ax; conPositions[ptr++] = ay; conPositions[ptr++] = az;
           conPositions[ptr++] = hv.x; conPositions[ptr++] = hv.y; conPositions[ptr++] = hv.z;
           const bias = 0.7;
-          conColors[cptr++] = 0.2; conColors[cptr++] = 0.9; conColors[cptr++] = 1.0; // start
-          conColors[cptr++] = 0.2 * bias; conColors[cptr++] = 0.9 * bias; conColors[cptr++] = 1.0 * bias; // end
+          conColors[cptr++] = 0.2; conColors[cptr++] = 0.9; conColors[cptr++] = 1.0;
+          conColors[cptr++] = 0.2 * bias; conColors[cptr++] = 0.9 * bias; conColors[cptr++] = 1.0 * bias;
         }
 
-        // lokale Nachbarn finden (einfacher O(n^2) mit Limit)
         for (let j = i + 1; j < Math.min(i + 24, NEURON_COUNT); j++) {
           const j3 = j * 3;
           const bx = pos.getX(j);
@@ -215,10 +202,9 @@ export default function NetworkSixInterface() {
           const dx = ax - bx, dy = ay - by, dz = az - bz;
           const d2 = dx * dx + dy * dy + dz * dz;
           if (d2 < maxDist * maxDist && ptr + 6 < MAX_CONNECTIONS * 3) {
-            const falloff = 1.0 - Math.sqrt(d2) / maxDist; // 0..1
+            const falloff = 1.0 - Math.sqrt(d2) / maxDist;
             conPositions[ptr++] = ax; conPositions[ptr++] = ay; conPositions[ptr++] = az;
             conPositions[ptr++] = bx; conPositions[ptr++] = by; conPositions[ptr++] = bz;
-            // Farbe/Alpha entlang Linie
             const a = 0.25 + 0.5 * falloff;
             conColors[cptr++] = 0.4; conColors[cptr++] = 0.8; conColors[cptr++] = 1.0;
             conColors[cptr++] = 0.4 * a; conColors[cptr++] = 0.8 * a; conColors[cptr++] = 1.0 * a;
@@ -236,15 +222,12 @@ export default function NetworkSixInterface() {
 
     animate();
 
-    // Cleanup
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMove);
       renderer.setAnimationLoop(null);
       renderer.dispose();
       mount.removeChild(renderer.domElement);
-
-      // Geometrien / Materialien freigeben
       neuronGeo.dispose();
       conGeo.dispose();
       hexGeo.dispose();
@@ -256,14 +239,12 @@ export default function NetworkSixInterface() {
 
   return (
     <div className="relative min-h-screen bg-[#0a0d14] text-neutral-100 overflow-hidden">
-      {/* 3D‑Hintergrund */}
       <div ref={mountRef} className="absolute inset-0 -z-10" />
 
-      {/* UI‑Overlay */}
       <header className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-300" />
-          <span className="font-semibold tracking-tight">Network6</span>
+          <span className="font-semibold tracking-tight">NetworkSix</span>
         </div>
         <nav className="hidden md:flex gap-6 text-sm text-neutral-300">
           <a className="hover:text-white" href="#features">Features</a>
@@ -287,7 +268,7 @@ export default function NetworkSixInterface() {
           transition={{ duration: 0.7, delay: 0.05 }}
           className="mt-4 max-w-2xl text-neutral-300"
         >
-          A neural fabric converging into a resilient core. AI × Crypto infrastructure by Network6.
+          A neural fabric converging into a resilient core. AI × Crypto infrastructure by NetworkSix.
         </motion.p>
 
         <motion.div
@@ -304,7 +285,6 @@ export default function NetworkSixInterface() {
           </a>
         </motion.div>
 
-        {/* Platzhalter-Sektionen */}
         <section id="features" className="mt-20 grid md:grid-cols-3 gap-4">
           {[
             { title: "AI Research", desc: "Prototyping, inference, retrieval pipelines." },
@@ -331,7 +311,7 @@ export default function NetworkSixInterface() {
       </main>
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 pt-6 text-sm text-neutral-400">
-        © {new Date().getFullYear()} Network6. All rights reserved.
+        © {new Date().getFullYear()} NetworkSix. All rights reserved.
       </footer>
     </div>
   );
