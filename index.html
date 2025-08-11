@@ -1,213 +1,338 @@
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Network6 – Index mit Reitern</title>
-  <style>
-    :root {
-      --bg: #0b0c0f;
-      --panel: #12141a;
-      --muted: #9aa4b2;
-      --text: #e6eaf2;
-      --brand: #48c8ff;
-      --border: #202431;
-      --radius: 14px;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 600px at 50% -10%, #0f3046 0%, transparent 60%), var(--bg);
-      color: var(--text);
-    }
-    .container { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
-    header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; }
-    .brand { display:flex; align-items:center; gap:10px; }
-    .logo { width: 28px; height: 28px; border-radius: 9px; background: linear-gradient(135deg, #6ee7ff, #37e6b3); }
-    .tabs {
-      display: flex; gap: 6px; padding: 6px; background: #0f1117; border: 1px solid var(--border); border-radius: calc(var(--radius) + 6px);
-    }
-    .tab-btn {
-      appearance: none; border: 1px solid transparent; background: transparent; color: var(--muted);
-      padding: 10px 14px; border-radius: var(--radius); cursor: pointer; font-weight: 600; letter-spacing: .2px;
-    }
-    .tab-btn[aria-selected="true"] {
-      background: var(--panel); color: var(--text); border-color: var(--border);
-      box-shadow: inset 0 0 0 1px #1b2030, 0 0 0 1px #0005;
-    }
-    .tab-btn:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
-    .panel {
-      margin-top: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-      min-height: 280px; padding: 18px; box-shadow: 0 10px 30px #0006;
-    }
-    .panel .loading { color: var(--muted); font-style: italic; }
-    .toolbar { display:flex; align-items:center; justify-content:space-between; margin: 10px 2px 16px; color: var(--muted); }
-    .toolbar a { color: #b9dfff; text-decoration: none; }
-    .toolbar a:hover { text-decoration: underline; }
-    footer { margin: 30px 2px 0; color: var(--muted); font-size: 12px; display:flex; gap:12px; flex-wrap:wrap; }
-    code { background:#0e1320; padding:2px 6px; border-radius:6px; border:1px solid #1a2233; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <strong>Network6</strong>
-      </div>
-      <nav aria-label="Schnellzugriff">
-        <a href="#" style="color:#b9dfff;text-decoration:none;">Docs</a>
-      </nav>
-    </header>
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
+import { motion } from "framer-motion";
 
-    <!-- Reiter / Tabs -->
-    <div role="tablist" aria-label="Bereiche" class="tabs" id="tabs">
-      <!-- data-url verweist auf EIGENE HTML-Datei, die separat entwickelt wird -->
-      <button role="tab" class="tab-btn" aria-selected="true" aria-controls="panel" id="tab-overview" data-tab="overview" data-url="partials/overview.html">Overview</button>
-      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-ai" data-tab="ai" data-url="partials/ai.html">AI</button>
-      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-onchain" data-tab="onchain" data-url="partials/onchain.html">On‑Chain</button>
-      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-security" data-tab="security" data-url="partials/security.html">Security</button>
-      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-contact" data-tab="contact" data-url="partials/contact.html">Contact</button>
-    </div>
+// ------------------------------------------------------------
+// Network6 – Interface
+// Hintergrund: abstrakte Neuronen (Partikel + Verbindungen),
+// die sich zu einem 3D‑Hexagon (Hex‑Prisma) hin verbinden.
+// ------------------------------------------------------------
 
-    <div class="toolbar">
-      <span>Tipp: Jede Registerkarte lädt eine separate HTML-Datei ("Partials").</span>
-      <span>Deep‑Link: <code>?tab=ai</code> → lädt automatisch den AI‑Reiter</span>
-    </div>
+export default function NetworkSixInterface() {
+  const mountRef = useRef<HTMLDivElement | null>(null);
 
-    <!-- Panel, in das die HTML-Partials geladen werden -->
-    <section id="panel" class="panel" role="tabpanel" tabindex="0" aria-labelledby="tab-overview">
-      <p class="loading">Lade Inhalt …</p>
-    </section>
+  useEffect(() => {
+    const mount = mountRef.current!;
 
-    <footer>
-      <span>© <span id="year"></span> Network6</span>
-      <span>Built for tabs + lazy loading</span>
-    </footer>
-  </div>
+    // Canvas & Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(mount.clientWidth, mount.clientHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    mount.appendChild(renderer.domElement);
 
-  <script>
-    // Utility: Query-String lesen (für Deep Links wie ?tab=ai)
-    function getQueryParam(key) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(key);
+    // Szene & Kamera
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      55,
+      mount.clientWidth / mount.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 0.4, 7);
+
+    // Leichte Farbflächen für Tiefe
+    const bgPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshBasicMaterial({
+        color: 0x0a0d14,
+        transparent: true,
+        opacity: 1,
+      })
+    );
+    bgPlane.position.z = -10;
+    scene.add(bgPlane);
+
+    // Beleuchtung subtil für Drahtgitter
+    const light = new THREE.DirectionalLight(0xffffff, 0.6);
+    light.position.set(5, 8, 5);
+    scene.add(light);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambient);
+
+    // --- HEXAGON (Hexagonales Prisma, Drahtgitter) ---
+    const hexRadius = 1.8;
+    const hexHeight = 0.6;
+    const hexGeo = new THREE.CylinderGeometry(hexRadius, hexRadius, hexHeight, 6, 1, true);
+    const hexEdges = new THREE.EdgesGeometry(hexGeo);
+    const hexMat = new THREE.LineBasicMaterial({ color: 0x6bdcff, transparent: true, opacity: 0.9 });
+    const hexWire = new THREE.LineSegments(hexEdges, hexMat);
+    scene.add(hexWire);
+
+    // Leichte Innenfläche (sehr transparent)
+    const hexShell = new THREE.Mesh(
+      hexGeo.clone(),
+      new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color("#0b2b3a"),
+        emissive: new THREE.Color("#062231"),
+        metalness: 0.2,
+        roughness: 0.9,
+        transparent: true,
+        opacity: 0.12,
+        side: THREE.DoubleSide,
+      })
+    );
+    scene.add(hexShell);
+
+    // --- NEURONS (Partikel) ---
+    const NEURON_COUNT = 320;
+    const RANGE = 7; // Streuung der Partikel
+    const positions = new Float32Array(NEURON_COUNT * 3);
+    const velocities = new Float32Array(NEURON_COUNT * 3);
+
+    for (let i = 0; i < NEURON_COUNT; i++) {
+      const i3 = i * 3;
+      positions[i3 + 0] = (Math.random() - 0.5) * RANGE * 2;
+      positions[i3 + 1] = (Math.random() - 0.5) * RANGE * 1.2;
+      positions[i3 + 2] = (Math.random() - 0.5) * RANGE * 2;
+      velocities[i3 + 0] = (Math.random() - 0.5) * 0.01;
+      velocities[i3 + 1] = (Math.random() - 0.5) * 0.012;
+      velocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
     }
 
-    const panel = document.getElementById('panel');
-    const tabButtons = Array.from(document.querySelectorAll('[role="tab"]'));
-
-    // Tastatur‑Navi für Barrierefreiheit (Links/Rechts)
-    document.getElementById('tabs').addEventListener('keydown', (e) => {
-      const current = document.activeElement;
-      const idx = tabButtons.indexOf(current);
-      if (idx === -1) return;
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        const next = tabButtons[(idx + 1) % tabButtons.length];
-        next.focus(); next.click();
-      }
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        const prev = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
-        prev.focus(); prev.click();
-      }
+    const neuronGeo = new THREE.BufferGeometry();
+    neuronGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const neuronMat = new THREE.PointsMaterial({
+      size: 0.045,
+      color: 0xa9e7ff,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
     });
+    const neurons = new THREE.Points(neuronGeo, neuronMat);
+    scene.add(neurons);
 
-    // Inhalt laden
-    async function loadPartial(btn) {
-      const url = btn.dataset.url;
-      const tabId = btn.id;
-      tabButtons.forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
-      panel.setAttribute('aria-labelledby', tabId);
-      panel.innerHTML = '<p class="loading">Lade Inhalt …</p>';
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
-        const html = await res.text();
-        // Simple Sicherheit: Entferne <script>-Tags aus Partials
-        const safe = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
-        panel.innerHTML = safe;
-        // Fokus fürs Screen‑Reading
-        panel.focus({ preventScroll: false });
-      } catch (err) {
-        panel.innerHTML = `<p style="color:#ffb4b4">Fehler beim Laden von <code>${url}</code>: ${err.message}</p>`;
-      }
+    // --- CONNECTIONS (Linien zwischen nahen Neuronen + zum Hexagon) ---
+    const MAX_CONNECTIONS = 4500;
+    const conPositions = new Float32Array(MAX_CONNECTIONS * 3);
+    const conColors = new Float32Array(MAX_CONNECTIONS * 3);
+    const conGeo = new THREE.BufferGeometry();
+    conGeo.setAttribute("position", new THREE.BufferAttribute(conPositions, 3));
+    conGeo.setAttribute("color", new THREE.BufferAttribute(conColors, 3));
+    const conMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.35 });
+    const connections = new THREE.LineSegments(conGeo, conMat);
+    scene.add(connections);
+
+    // Zielpunkte am Hexagon (Scheitelpunkte sammeln)
+    const hexVerts: THREE.Vector3[] = [];
+    hexWire.geometry.computeBoundingSphere();
+    const tmpAttr = (hexWire.geometry as THREE.EdgesGeometry).attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < tmpAttr.count; i += 2) {
+      // nimm jeden zweiten Punkt (Kanten) – wir sammeln beide Enden
+      const v1 = new THREE.Vector3(
+        tmpAttr.getX(i),
+        tmpAttr.getY(i),
+        tmpAttr.getZ(i)
+      );
+      const v2 = new THREE.Vector3(
+        tmpAttr.getX(i + 1),
+        tmpAttr.getY(i + 1),
+        tmpAttr.getZ(i + 1)
+      );
+      hexVerts.push(v1, v2);
     }
 
-    // Klick‑Handler
-    tabButtons.forEach(btn => btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      const params = new URLSearchParams(window.location.search);
-      params.set('tab', tab);
-      const newUrl = window.location.pathname + '?' + params.toString();
-      history.replaceState(null, '', newUrl);
-      loadPartial(btn);
-    }));
+    // Mausparallaxe
+    const mouse = new THREE.Vector2(0, 0);
+    const onMove = (e: MouseEvent) => {
+      const rect = mount.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+    };
+    window.addEventListener("mousemove", onMove);
 
-    // Beim Laden: richtige Registerkarte wählen
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('year').textContent = new Date().getFullYear();
-      const q = getQueryParam('tab');
-      const initial = tabButtons.find(b => b.dataset.tab === q) || tabButtons[0];
-      loadPartial(initial);
-    });
-  </script>
-</body>
-</html>
+    // Resize
+    const onResize = () => {
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
+      camera.aspect = mount.clientWidth / mount.clientHeight;
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener("resize", onResize);
 
-<!-- ==========================================================
-Beispiel‑Partials (separate HTML‑Dateien), in /partials/ ablegen
-==============================================================-->
+    // Animation
+    let frameId: number;
+    const clock = new THREE.Clock();
 
-<!-- Datei: /partials/overview.html -->
-<!--
-<section>
-  <h2>Overview</h2>
-  <p>Willkommen bei <strong>Network6</strong>. Diese Registerkarte ist ein externes HTML‑Partial.
-     Du kannst hier beliebige Inhalte bauen – ganz unabhängig vom Index.</p>
-  <ul>
-    <li>Quick Facts</li>
-    <li>Highlights</li>
-    <li>Aktuelle Ankündigungen</li>
-  </ul>
-</section>
--->
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.033);
 
-<!-- Datei: /partials/ai.html -->
-<!--
-<section>
-  <h2>AI</h2>
-  <p>Modelle, Inferenz, Tooling. Füge hier Demos, Diagramme oder Code‑Snippets ein.</p>
-</section>
--->
+      // Hexagon sanft rotieren / parallaxen
+      hexWire.rotation.y += 0.08 * dt;
+      hexShell.rotation.y = hexWire.rotation.y;
+      const parallax = 0.2;
+      camera.position.x = mouse.x * parallax;
+      camera.position.y = 0.4 + mouse.y * 0.1;
+      camera.lookAt(0, 0, 0);
 
-<!-- Datei: /partials/onchain.html -->
-<!--
-<section>
-  <h2>On‑Chain</h2>
-  <p>On‑Chain Analytics, Smart‑Contracts, Security‑Audits. Frei gestaltbar.</p>
-</section>
--->
+      // Partikel updaten (sanftes Umherschweben + begrenzen)
+      const pos = neuronGeo.getAttribute("position") as THREE.BufferAttribute;
+      for (let i = 0; i < NEURON_COUNT; i++) {
+        const i3 = i * 3;
+        let x = pos.getX(i) + velocities[i3 + 0];
+        let y = pos.getY(i) + velocities[i3 + 1];
+        let z = pos.getZ(i) + velocities[i3 + 2];
+        // leichte Rückstellkraft zum Zentrum
+        velocities[i3 + 0] += -x * 0.00003;
+        velocities[i3 + 1] += -y * 0.00003;
+        velocities[i3 + 2] += -z * 0.00003;
+        // sanfte Grenzen
+        x = THREE.MathUtils.clamp(x, -RANGE, RANGE);
+        y = THREE.MathUtils.clamp(y, -RANGE * 0.8, RANGE * 0.8);
+        z = THREE.MathUtils.clamp(z, -RANGE, RANGE);
+        pos.setXYZ(i, x, y, z);
+      }
+      pos.needsUpdate = true;
 
-<!-- Datei: /partials/security.html -->
-<!--
-<section>
-  <h2>Security</h2>
-  <p>Threat Models, Monitoring, Incident‑Playbooks.</p>
-</section>
--->
+      // Verbindungen neu zeichnen
+      let ptr = 0;
+      let cptr = 0;
+      const maxDist = 1.25; // Verbindungsschwelle
+      const center = new THREE.Vector3(0, 0, 0);
 
-<!-- Datei: /partials/contact.html -->
-<!--
-<section>
-  <h2>Contact</h2>
-  <form>
-    <label>Name<br><input type="text" required></label><br><br>
-    <label>Email<br><input type="email" required></label><br><br>
-    <label>Nachricht<br><textarea rows="5"></textarea></label><br><br>
-    <button type="submit">Senden</button>
-  </form>
-</section>
--->
+      for (let i = 0; i < NEURON_COUNT; i++) {
+        const i3 = i * 3;
+        const ax = pos.getX(i);
+        const ay = pos.getY(i);
+        const az = pos.getZ(i);
+
+        // ein paar Verbindungen von Neuronen -> Hexagon-Knoten
+        if (i % 11 === 0 && ptr + 6 < MAX_CONNECTIONS * 3) {
+          const hv = hexVerts[(i + Math.floor(performance.now() * 0.001)) % hexVerts.length];
+          conPositions[ptr++] = ax; conPositions[ptr++] = ay; conPositions[ptr++] = az;
+          conPositions[ptr++] = hv.x; conPositions[ptr++] = hv.y; conPositions[ptr++] = hv.z;
+          const bias = 0.7;
+          conColors[cptr++] = 0.2; conColors[cptr++] = 0.9; conColors[cptr++] = 1.0; // start
+          conColors[cptr++] = 0.2 * bias; conColors[cptr++] = 0.9 * bias; conColors[cptr++] = 1.0 * bias; // end
+        }
+
+        // lokale Nachbarn finden (einfacher O(n^2) mit Limit)
+        for (let j = i + 1; j < Math.min(i + 24, NEURON_COUNT); j++) {
+          const j3 = j * 3;
+          const bx = pos.getX(j);
+          const by = pos.getY(j);
+          const bz = pos.getZ(j);
+          const dx = ax - bx, dy = ay - by, dz = az - bz;
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < maxDist * maxDist && ptr + 6 < MAX_CONNECTIONS * 3) {
+            const falloff = 1.0 - Math.sqrt(d2) / maxDist; // 0..1
+            conPositions[ptr++] = ax; conPositions[ptr++] = ay; conPositions[ptr++] = az;
+            conPositions[ptr++] = bx; conPositions[ptr++] = by; conPositions[ptr++] = bz;
+            // Farbe/Alpha entlang Linie
+            const a = 0.25 + 0.5 * falloff;
+            conColors[cptr++] = 0.4; conColors[cptr++] = 0.8; conColors[cptr++] = 1.0;
+            conColors[cptr++] = 0.4 * a; conColors[cptr++] = 0.8 * a; conColors[cptr++] = 1.0 * a;
+          }
+        }
+      }
+
+      conGeo.setDrawRange(0, ptr / 3);
+      (conGeo.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
+      (conGeo.getAttribute("color") as THREE.BufferAttribute).needsUpdate = true;
+
+      renderer.render(scene, camera);
+      frameId = renderer.setAnimationLoop(animate) as unknown as number;
+    }
+
+    animate();
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousemove", onMove);
+      renderer.setAnimationLoop(null);
+      renderer.dispose();
+      mount.removeChild(renderer.domElement);
+
+      // Geometrien / Materialien freigeben
+      neuronGeo.dispose();
+      conGeo.dispose();
+      hexGeo.dispose();
+      hexEdges.dispose();
+      hexMat.dispose();
+      (hexShell.material as THREE.Material).dispose?.();
+    };
+  }, []);
+
+  return (
+    <div className="relative min-h-screen bg-[#0a0d14] text-neutral-100 overflow-hidden">
+      {/* 3D‑Hintergrund */}
+      <div ref={mountRef} className="absolute inset-0 -z-10" />
+
+      {/* UI‑Overlay */}
+      <header className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-300" />
+          <span className="font-semibold tracking-tight">Network6</span>
+        </div>
+        <nav className="hidden md:flex gap-6 text-sm text-neutral-300">
+          <a className="hover:text-white" href="#features">Features</a>
+          <a className="hover:text-white" href="#solutions">Solutions</a>
+          <a className="hover:text-white" href="#contact">Contact</a>
+        </nav>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 pt-10 pb-24">
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl md:text-6xl font-semibold tracking-tight"
+        >
+          Intelligence, Connected.
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.05 }}
+          className="mt-4 max-w-2xl text-neutral-300"
+        >
+          A neural fabric converging into a resilient core. AI × Crypto infrastructure by Network6.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, delay: 0.1 }}
+          className="mt-8 flex flex-col sm:flex-row gap-3"
+        >
+          <a href="#contact" className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-medium bg-white text-neutral-900 hover:bg-white/90 transition shadow-lg shadow-white/10">
+            Request Access
+          </a>
+          <a href="#features" className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-medium bg-white/5 ring-1 ring-white/10 hover:bg-white/10 transition">
+            Explore
+          </a>
+        </motion.div>
+
+        {/* Platzhalter-Sektionen */}
+        <section id="features" className="mt-20 grid md:grid-cols-3 gap-4">
+          {[
+            { title: "AI Research", desc: "Prototyping, inference, retrieval pipelines." },
+            { title: "On‑Chain Analytics", desc: "Signals, risk scoring, monitoring." },
+            { title: "Security", desc: "Audits, adversarial testing, observability." },
+          ].map((f) => (
+            <div key={f.title} className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-5">
+              <h3 className="font-medium">{f.title}</h3>
+              <p className="mt-2 text-sm text-neutral-300">{f.desc}</p>
+            </div>
+          ))}
+        </section>
+
+        <section id="contact" className="mt-16">
+          <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-6">
+            <h2 className="text-xl font-semibold">Get in touch</h2>
+            <p className="text-neutral-300 text-sm mt-1">Tell us about your use‑case. We'll reach out with early access details.</p>
+            <form className="mt-4 grid md:grid-cols-3 gap-3" onSubmit={(e) => { e.preventDefault(); alert("Thanks! We'll be in touch."); }}>
+              <input className="md:col-span-2 w-full rounded-xl bg-neutral-950 placeholder:text-neutral-500 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400/60" placeholder="you@company.com" type="email" required />
+              <button className="rounded-xl px-5 py-3 text-sm font-medium bg-white text-neutral-900 hover:bg-white/90 transition shadow-lg shadow-white/10" type="submit">Request Access</button>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer className="max-w-6xl mx-auto px-4 pb-10 pt-6 text-sm text-neutral-400">
+        © {new Date().getFullYear()} Network6. All rights reserved.
+      </footer>
+    </div>
+  );
+}
