@@ -1,176 +1,213 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Shield, Brain, LineChart, Code2, ChevronRight } from "lucide-react";
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Network6 – Index mit Reitern</title>
+  <style>
+    :root {
+      --bg: #0b0c0f;
+      --panel: #12141a;
+      --muted: #9aa4b2;
+      --text: #e6eaf2;
+      --brand: #48c8ff;
+      --border: #202431;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 50% -10%, #0f3046 0%, transparent 60%), var(--bg);
+      color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .logo { width: 28px; height: 28px; border-radius: 9px; background: linear-gradient(135deg, #6ee7ff, #37e6b3); }
+    .tabs {
+      display: flex; gap: 6px; padding: 6px; background: #0f1117; border: 1px solid var(--border); border-radius: calc(var(--radius) + 6px);
+    }
+    .tab-btn {
+      appearance: none; border: 1px solid transparent; background: transparent; color: var(--muted);
+      padding: 10px 14px; border-radius: var(--radius); cursor: pointer; font-weight: 600; letter-spacing: .2px;
+    }
+    .tab-btn[aria-selected="true"] {
+      background: var(--panel); color: var(--text); border-color: var(--border);
+      box-shadow: inset 0 0 0 1px #1b2030, 0 0 0 1px #0005;
+    }
+    .tab-btn:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+    .panel {
+      margin-top: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      min-height: 280px; padding: 18px; box-shadow: 0 10px 30px #0006;
+    }
+    .panel .loading { color: var(--muted); font-style: italic; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; margin: 10px 2px 16px; color: var(--muted); }
+    .toolbar a { color: #b9dfff; text-decoration: none; }
+    .toolbar a:hover { text-decoration: underline; }
+    footer { margin: 30px 2px 0; color: var(--muted); font-size: 12px; display:flex; gap:12px; flex-wrap:wrap; }
+    code { background:#0e1320; padding:2px 6px; border-radius:6px; border:1px solid #1a2233; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <strong>Network6</strong>
+      </div>
+      <nav aria-label="Schnellzugriff">
+        <a href="#" style="color:#b9dfff;text-decoration:none;">Docs</a>
+      </nav>
+    </header>
 
-export default function NetworkSixLanding() {
-  const [email, setEmail] = useState("");
-
-  const features = [
-    {
-      icon: <Brain className="h-6 w-6" aria-hidden="true" />,
-      title: "AI Research",
-      desc: "Model prototyping, inference infra, and applied ML for real products.",
-    },
-    {
-      icon: <LineChart className="h-6 w-6" aria-hidden="true" />,
-      title: "On‑Chain Analytics",
-      desc: "Signals, risk scoring, and market intelligence across chains.",
-    },
-    {
-      icon: <Shield className="h-6 w-6" aria-hidden="true" />,
-      title: "Security & Audits",
-      desc: "Smart‑contract review, adversarial testing, and monitoring.",
-    },
-    {
-      icon: <Code2 className="h-6 w-6" aria-hidden="true" />,
-      title: "Dev Tools",
-      desc: "SDKs, APIs, and templates to ship faster and safer.",
-    },
-  ];
-
-  return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 selection:bg-white/10">
-      {/* Nav */}
-      <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/60">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-300" />
-            <span className="text-lg font-semibold tracking-tight">Network6</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-neutral-300">
-            <a href="#features" className="hover:text-white">Features</a>
-            <a href="#about" className="hover:text-white">About</a>
-            <a href="#contact" className="hover:text-white">Contact</a>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 opacity-30 [mask-image:radial-gradient(60%_50%_at_50%_0%,black,transparent)]">
-          <div className="mx-auto max-w-6xl px-4">
-            <div className="h-72 bg-gradient-to-b from-sky-500/30 via-cyan-400/20 to-transparent blur-3xl" />
-          </div>
-        </div>
-        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl md:text-6xl font-semibold tracking-tight"
-          >
-            AI × Crypto Infrastructure
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.05 }}
-            className="mt-5 max-w-2xl text-neutral-300"
-          >
-            Building resilient systems for the next wave of intelligence and on‑chain innovation.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="mt-8 flex flex-col sm:flex-row gap-3"
-          >
-            <a
-              href="#contact"
-              className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-medium bg-white text-neutral-900 hover:bg-white/90 transition shadow-lg shadow-white/10"
-            >
-              Request Access
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </a>
-            <a
-              href="#features"
-              className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-medium bg-neutral-900/60 ring-1 ring-white/10 hover:bg-neutral-900/80 transition"
-            >
-              Explore Features
-            </a>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="mx-auto max-w-6xl px-4 py-16 md:py-24">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl border border-white/10 bg-neutral-900/40 p-5 hover:border-white/20 hover:bg-neutral-900/60 transition shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-white/5 p-2">{f.icon}</div>
-                <h3 className="text-base font-medium">{f.title}</h3>
-              </div>
-              <p className="mt-3 text-sm text-neutral-300">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* About */}
-      <section id="about" className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-        <div className="rounded-2xl border border-white/10 bg-neutral-900/40 p-6 md:p-8">
-          <h2 className="text-2xl font-semibold tracking-tight">Why Network6?</h2>
-          <p className="mt-3 text-neutral-300">
-            We combine rigorous research with real‑world products. Our team ships secure, observable systems
-            that scale – from model serving and retrieval pipelines to on‑chain data and security tooling.
-          </p>
-          <ul className="mt-5 grid md:grid-cols-3 gap-3 text-sm text-neutral-300">
-            <li className="rounded-xl bg-white/5 p-3">Deterministic builds & audits</li>
-            <li className="rounded-xl bg-white/5 p-3">Privacy‑first data flows</li>
-            <li className="rounded-xl bg-white/5 p-3">Battle‑tested infra patterns</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Contact */}
-      <section id="contact" className="mx-auto max-w-6xl px-4 pb-24">
-        <div className="rounded-2xl border border-white/10 bg-neutral-900/40 p-6 md:p-8">
-          <h2 className="text-2xl font-semibold tracking-tight">Get in touch</h2>
-          <p className="mt-2 text-neutral-300">Tell us about your use‑case. We'll reach out with early‑access details.</p>
-
-          <form
-            className="mt-6 grid gap-3 md:grid-cols-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert(`Thanks! We'll contact: ${email}`);
-              setEmail("");
-            }}
-          >
-            <input
-              type="email"
-              required
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="md:col-span-2 w-full rounded-xl bg-neutral-950 placeholder:text-neutral-500 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
-            />
-            <button
-              type="submit"
-              className="rounded-xl px-5 py-3 text-sm font-medium bg-white text-neutral-900 hover:bg-white/90 transition shadow-lg shadow-white/10"
-            >
-              Request Access
-            </button>
-          </form>
-
-          <div className="mt-6 text-xs text-neutral-400">
-            By submitting, you agree to our terms and acknowledge our privacy policy.
-          </div>
-        </div>
-
-        <footer className="mt-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-sm text-neutral-400">
-          <div>© {new Date().getFullYear()} Network6. All rights reserved.</div>
-          <div className="flex items-center gap-4">
-            <a className="hover:text-neutral-200" href="#">Twitter</a>
-            <a className="hover:text-neutral-200" href="#">GitHub</a>
-            <a className="hover:text-neutral-200" href="#">Docs</a>
-          </div>
-        </footer>
-      </section>
+    <!-- Reiter / Tabs -->
+    <div role="tablist" aria-label="Bereiche" class="tabs" id="tabs">
+      <!-- data-url verweist auf EIGENE HTML-Datei, die separat entwickelt wird -->
+      <button role="tab" class="tab-btn" aria-selected="true" aria-controls="panel" id="tab-overview" data-tab="overview" data-url="partials/overview.html">Overview</button>
+      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-ai" data-tab="ai" data-url="partials/ai.html">AI</button>
+      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-onchain" data-tab="onchain" data-url="partials/onchain.html">On‑Chain</button>
+      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-security" data-tab="security" data-url="partials/security.html">Security</button>
+      <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel" id="tab-contact" data-tab="contact" data-url="partials/contact.html">Contact</button>
     </div>
-  );
-}
+
+    <div class="toolbar">
+      <span>Tipp: Jede Registerkarte lädt eine separate HTML-Datei ("Partials").</span>
+      <span>Deep‑Link: <code>?tab=ai</code> → lädt automatisch den AI‑Reiter</span>
+    </div>
+
+    <!-- Panel, in das die HTML-Partials geladen werden -->
+    <section id="panel" class="panel" role="tabpanel" tabindex="0" aria-labelledby="tab-overview">
+      <p class="loading">Lade Inhalt …</p>
+    </section>
+
+    <footer>
+      <span>© <span id="year"></span> Network6</span>
+      <span>Built for tabs + lazy loading</span>
+    </footer>
+  </div>
+
+  <script>
+    // Utility: Query-String lesen (für Deep Links wie ?tab=ai)
+    function getQueryParam(key) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(key);
+    }
+
+    const panel = document.getElementById('panel');
+    const tabButtons = Array.from(document.querySelectorAll('[role="tab"]'));
+
+    // Tastatur‑Navi für Barrierefreiheit (Links/Rechts)
+    document.getElementById('tabs').addEventListener('keydown', (e) => {
+      const current = document.activeElement;
+      const idx = tabButtons.indexOf(current);
+      if (idx === -1) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = tabButtons[(idx + 1) % tabButtons.length];
+        next.focus(); next.click();
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
+        prev.focus(); prev.click();
+      }
+    });
+
+    // Inhalt laden
+    async function loadPartial(btn) {
+      const url = btn.dataset.url;
+      const tabId = btn.id;
+      tabButtons.forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+      panel.setAttribute('aria-labelledby', tabId);
+      panel.innerHTML = '<p class="loading">Lade Inhalt …</p>';
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+        const html = await res.text();
+        // Simple Sicherheit: Entferne <script>-Tags aus Partials
+        const safe = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+        panel.innerHTML = safe;
+        // Fokus fürs Screen‑Reading
+        panel.focus({ preventScroll: false });
+      } catch (err) {
+        panel.innerHTML = `<p style="color:#ffb4b4">Fehler beim Laden von <code>${url}</code>: ${err.message}</p>`;
+      }
+    }
+
+    // Klick‑Handler
+    tabButtons.forEach(btn => btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      const params = new URLSearchParams(window.location.search);
+      params.set('tab', tab);
+      const newUrl = window.location.pathname + '?' + params.toString();
+      history.replaceState(null, '', newUrl);
+      loadPartial(btn);
+    }));
+
+    // Beim Laden: richtige Registerkarte wählen
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      const q = getQueryParam('tab');
+      const initial = tabButtons.find(b => b.dataset.tab === q) || tabButtons[0];
+      loadPartial(initial);
+    });
+  </script>
+</body>
+</html>
+
+<!-- ==========================================================
+Beispiel‑Partials (separate HTML‑Dateien), in /partials/ ablegen
+==============================================================-->
+
+<!-- Datei: /partials/overview.html -->
+<!--
+<section>
+  <h2>Overview</h2>
+  <p>Willkommen bei <strong>Network6</strong>. Diese Registerkarte ist ein externes HTML‑Partial.
+     Du kannst hier beliebige Inhalte bauen – ganz unabhängig vom Index.</p>
+  <ul>
+    <li>Quick Facts</li>
+    <li>Highlights</li>
+    <li>Aktuelle Ankündigungen</li>
+  </ul>
+</section>
+-->
+
+<!-- Datei: /partials/ai.html -->
+<!--
+<section>
+  <h2>AI</h2>
+  <p>Modelle, Inferenz, Tooling. Füge hier Demos, Diagramme oder Code‑Snippets ein.</p>
+</section>
+-->
+
+<!-- Datei: /partials/onchain.html -->
+<!--
+<section>
+  <h2>On‑Chain</h2>
+  <p>On‑Chain Analytics, Smart‑Contracts, Security‑Audits. Frei gestaltbar.</p>
+</section>
+-->
+
+<!-- Datei: /partials/security.html -->
+<!--
+<section>
+  <h2>Security</h2>
+  <p>Threat Models, Monitoring, Incident‑Playbooks.</p>
+</section>
+-->
+
+<!-- Datei: /partials/contact.html -->
+<!--
+<section>
+  <h2>Contact</h2>
+  <form>
+    <label>Name<br><input type="text" required></label><br><br>
+    <label>Email<br><input type="email" required></label><br><br>
+    <label>Nachricht<br><textarea rows="5"></textarea></label><br><br>
+    <button type="submit">Senden</button>
+  </form>
+</section>
+-->
